@@ -10,10 +10,6 @@
   "action": {
     "title": "Pathfinder Movement",
     "icon": "/icon.svg",
-    "popover": {
-      "url": "/index.html",
-      "height": 600,
-      "width": 360
-    }
+    "popover": "/index.html"
   }
 }
