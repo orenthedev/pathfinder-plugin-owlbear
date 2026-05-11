@@ -1,4 +1,5 @@
 {
+  "manifest_version": 1,
   "id": "br.owlbear.pathfinder-movement",
   "name": "Pathfinder Movement",
   "description": "Movimentação avançada para tokens Pathfinder: caminhos manuais, automação por IA e controle de velocidade em tempo real.",
