@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pathfinder Movement</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+    :root {
+      --bg-deep:    #0d0d1a;
+      --bg-panel:   #131325;
+      --bg-card:    #1a1a30;
+      --bg-raised:  #21213a;
+      --gold:       #c9a84c;
+      --gold-light: #e4c76b;
+      --gold-dim:   #7a6330;
+      --red:        #c0392b;
+      --red-light:  #e74c3c;
+      --green:      #1e8449;
+      --green-light:#2ecc71;
+      --blue:       #1a5276;
+      --blue-light: #2980b9;
+      --text:       #e8dfc8;
+      --text-dim:   #8a7d6a;
+      --border:     rgba(201,168,76,0.2);
+      --shadow:     0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text);
+      font-family: 'Crimson Text', serif;
+      font-size: 15px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #0d0d1a 0%, #1a1228 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-icon { width: 28px; height: 28px; }
+    .header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .header-badge {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: monospace;
+      background: var(--bg-card);
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+    .tab {
+      flex: 1;
+      padding: 9px 4px;
+      text-align: center;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .tab:hover { color: var(--text); background: var(--bg-card); }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ── PANELS ── */
+    .panel { display: none; padding: 12px; }
+    .panel.active { display: block; }
+
+    /* ── SECTION HEADERS ── */
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px; height: 4px;
+      background: var(--gold);
+      transform: rotate(45deg);
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .card-sm {
+      background: var(--bg-raised);
+      border: 1px solid rgba(201,168,76,0.1);
+      border-radius: 4px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+    }
+
+    /* ── FORM ELEMENTS ── */
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Crimson Text', serif;
+      font-size: 14px;
+      padding: 6px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus { border-color: var(--gold); }
+    select option { background: var(--bg-deep); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .btn-gold {
+      background: linear-gradient(135deg, #7a6330, #c9a84c);
+      color: #0d0d1a;
+      border-color: var(--gold);
+    }
+    .btn-gold:hover { background: linear-gradient(135deg, #c9a84c, #e4c76b); }
+    .btn-red {
+      background: rgba(192,57,43,0.2);
+      color: var(--red-light);
+      border-color: var(--red);
+    }
+    .btn-red:hover { background: rgba(192,57,43,0.4); }
+    .btn-green {
+      background: rgba(30,132,73,0.2);
+      color: var(--green-light);
+      border-color: var(--green);
+    }
+    .btn-green:hover { background: rgba(30,132,73,0.4); }
+    .btn-blue {
+      background: rgba(26,82,118,0.3);
+      color: var(--blue-light);
+      border-color: var(--blue-light);
+    }
+    .btn-blue:hover { background: rgba(41,128,185,0.4); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border-color: var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--gold-dim); }
+    .btn-sm { padding: 4px 10px; font-size: 10px; }
+    .btn-full { width: 100%; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── TOGGLE SWITCH ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+    .toggle-label {
+      font-size: 13px;
+      color: var(--text);
+      flex: 1;
+    }
+    .toggle-label span {
+      display: block;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .toggle input:checked + .toggle-track { background: var(--green); border-color: var(--green-light); }
+    .toggle-track::before {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 14px; height: 14px;
+      background: var(--text-dim);
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-track::before {
+      transform: translateX(16px);
+      background: #fff;
+    }
+
+    /* ── RANGE SLIDER ── */
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      background: var(--bg-deep);
+      border-radius: 2px;
+      outline: none;
+      border: 1px solid var(--border);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      background: var(--gold);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .range-val {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--gold);
+      min-width: 42px;
+      text-align: right;
+    }
+
+    /* ── TOKEN LIST ── */
+    .token-list { display: flex; flex-direction: column; gap: 6px; }
+    .token-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 7px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .token-item:hover { border-color: var(--gold-dim); }
+    .token-item.selected { border-color: var(--gold); background: rgba(201,168,76,0.08); }
+    .token-item.active-path { border-color: var(--green); animation: pulse-green 1.5s infinite; }
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.3); }
+      50% { box-shadow: 0 0 0 4px rgba(46,204,113,0); }
+    }
+    .token-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .token-info { flex: 1; min-width: 0; }
+    .token-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .token-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .token-actions { display: flex; gap: 4px; }
+
+    /* ── PATH WAYPOINTS ── */
+    .waypoint-list { display: flex; flex-direction: column; gap: 4px; }
+    .waypoint-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .waypoint-num {
+      width: 18px; height: 18px;
+      background: var(--gold-dim);
+      color: #0d0d1a;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .waypoint-coords { font-family: monospace; color: var(--text-dim); font-size: 11px; flex: 1; }
+    .waypoint-del {
+      cursor: pointer;
+      color: var(--red-light);
+      opacity: 0.6;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .waypoint-del:hover { opacity: 1; }
+
+    /* ── STATUS BAR ── */
+    #status-bar {
+      margin-top: 10px;
+      padding: 7px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: none;
+    }
+    #status-bar.info    { background: rgba(26,82,118,0.3); border: 1px solid var(--blue-light); color: #7fc4e8; display: block; }
+    #status-bar.success { background: rgba(30,132,73,0.3); border: 1px solid var(--green); color: var(--green-light); display: block; }
+    #status-bar.warning { background: rgba(201,168,76,0.15); border: 1px solid var(--gold-dim); color: var(--gold); display: block; }
+    #status-bar.error   { background: rgba(192,57,43,0.2); border: 1px solid var(--red); color: var(--red-light); display: block; }
+
+    /* ── AI STATUS PANEL ── */
+    .ai-status {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px;
+      background: rgba(30,132,73,0.1);
+      border: 1px solid rgba(46,204,113,0.3);
+      border-radius: 5px;
+      margin-bottom: 8px;
+    }
+    .ai-status.visible { display: flex; }
+    .ai-status-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--green-light);
+    }
+    .ai-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green-light);
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+    .ai-target {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: monospace;
+    }
+
+    /* ── GRID / ROWS ── */
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+    .mt-4 { margin-top: 4px; }
+    .mt-8 { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .gap-6 { display: flex; flex-direction: column; gap: 6px; }
+
+    /* ── TYPE BADGE ── */
+    .type-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.05em;
+    }
+    .badge-character { background: rgba(41,128,185,0.3); color: #7fc4e8; border: 1px solid #2980b9; }
+    .badge-mount     { background: rgba(142,68,173,0.3); color: #c39bd3; border: 1px solid #8e44ad; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 24px 12px;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .empty-state .icon { font-size: 28px; margin-bottom: 8px; opacity: 0.5; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-deep); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+    /* ── COLLAPSIBLE ── */
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .collapsible-arrow {
+      font-size: 10px;
+      color: var(--text-dim);
+      transition: transform 0.2s;
+    }
+    .collapsible-header.open .collapsible-arrow { transform: rotate(180deg); }
+    .collapsible-body { display: none; margin-top: 8px; }
+    .collapsible-body.open { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <img class="header-icon" src="/icon.svg" alt="icon" />
+  <h1>Pathfinder Movement</h1>
+  <div class="header-badge" id="obr-status">⟳ connecting…</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" data-tab="tokens">⚔ Tokens</div>
+  <div class="tab" data-tab="movement">🗺 Movimento</div>
+  <div class="tab" data-tab="ai">🤖 IA</div>
+  <div class="tab" data-tab="settings">⚙ Config</div>
+</div>
+
+<!-- ═══════════ TAB: TOKENS ═══════════ -->
+<div class="panel active" id="panel-tokens">
+
+  <div class="section-title">Tokens Registrados</div>
+  <div id="token-list" class="token-list">
+    <div class="empty-state">
+      <div class="icon">⚔️</div>
+      <div>Nenhum token registrado.<br/>Adicione abaixo.</div>
+    </div>
+  </div>
+
+  <div class="mt-12">
+    <div class="section-title">Adicionar Token Pathfinder</div>
+    <div class="card">
+      <div class="gap-6">
+        <div>
+          <label>ID do Token (OBR)</label>
+          <div class="row">
+            <input type="text" id="input-token-id" placeholder="Cole o ID ou selecione no mapa" />
+            <button class="btn btn-ghost btn-sm" id="btn-pick-token" title="Selecionar token ativo no mapa">🎯</button>
+          </div>
+        </div>
+        <div>
+          <label>Nome</label>
+          <input type="text" id="input-token-name" placeholder="Ex: Thorin, Beholder..." />
+        </div>
+        <div class="row">
+          <div>
+            <label>Tipo</label>
+            <select id="input-token-type">
+              <option value="character">Character</option>
+              <option value="mount">Mount</option>
+            </select>
+          </div>
+          <div>
+            <label>Subtipo PF</label>
+            <select id="input-token-subtype">
+              <optgroup label="Characters">
+                <option value="fighter">Fighter</option>
+                <option value="wizard">Wizard</option>
+                <option value="rogue">Rogue</option>
+                <option value="cleric">Cleric</option>
+                <option value="ranger">Ranger</option>
+                <option value="paladin">Paladin</option>
+                <option value="druid">Druid</option>
+                <option value="barbarian">Barbarian</option>
+                <option value="bard">Bard</option>
+                <option value="monk">Monk</option>
+                <option value="sorcerer">Sorcerer</option>
+                <option value="alchemist">Alchemist</option>
+                <option value="champion">Champion</option>
+                <option value="investigator">Investigator</option>
+                <option value="oracle">Oracle</option>
+                <option value="swashbuckler">Swashbuckler</option>
+                <option value="witch">Witch</option>
+                <option value="custom">Custom</option>
+              </optgroup>
+              <optgroup label="Mounts">
+                <option value="horse">Horse</option>
+                <option value="griffon">Griffon</option>
+                <option value="wyvern">Wyvern</option>
+                <option value="drake">Drake</option>
+                <option value="spider">Giant Spider</option>
+                <option value="wolf">Dire Wolf</option>
+                <option value="custom_mount">Custom Mount</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label>Velocidade base (quadrados/turno)</label>
+          <div class="range-row">
+            <input type="range" id="input-speed" min="1" max="20" value="6" />
+            <span class="range-val" id="input-speed-val">6 sq</span>
+          </div>
+        </div>
+        <div>
+          <label>Cor do token</label>
+          <div class="row" id="color-picker">
+            <div class="token-color-opt" data-color="#e74c3c" style="background:#e74c3c"></div>
+            <div class="token-color-opt" data-color="#2ecc71" style="background:#2ecc71"></div>
+            <div class="token-color-opt" data-color="#3498db" style="background:#3498db"></div>
+            <div class="token-color-opt" data-color="#f39c12" style="background:#f39c12"></div>
+            <div class="token-color-opt" data-color="#9b59b6" style="background:#9b59b6"></div>
+            <div class="token-color-opt" data-color="#c9a84c" style="background:#c9a84c"></div>
+            <div class="token-color-opt" data-color="#e8dfc8" style="background:#e8dfc8"></div>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" id="btn-add-token">+ Registrar Token</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ TAB: MOVIMENTO ═══════════ -->
+<div class="panel" id="panel-movement">
+
+  <!-- Token selecionado -->
+  <div class="section-title">Token Ativo</div>
+  <div id="movement-token-selector" class="card-sm" style="margin-bottom:10px">
+    <div style="color:var(--text-dim);font-size:13px;text-align:center">
+      Selecione um token na aba ⚔ Tokens
+    </div>
+  </div>
+
+  <!-- Velocidade de animação -->
+  <div class="section-title">Velocidade de Animação</div>
+  <div class="card">
+    <label>Quadrados por segundo</label>
+    <div class="range-row">
+      <input type="range" id="anim-speed" min="0.5" max="10" step="0.5" value="3" />
+      <span class="range-val" id="anim-speed-val">3 sq/s</span>
+    </div>
+    <div style="font-size:11px;color:var(--text-dim);margin-top:6px">
+      ⚡ Velocidade visual da animação de caminho. Independente da velocidade do personagem.
+    </div>
+  </div>
+
+  <!-- Modo de caminho -->
+  <div class="section-title">Modo de Caminho</div>
+  <div class="card">
+    <div class="row" style="gap:6px;margin-bottom:10px">
+      <button class="btn btn-gold btn-full" id="btn-mode-manual">✏ Manual</button>
+      <button class="btn btn-ghost btn-full" id="btn-mode-click">🖱 Clique no Mapa</button>
+    </div>
+
+    <!-- Waypoints manuais -->
+    <div id="manual-path-ui">
+      <label>Adicionar waypoint (x, y em pixels)</label>
+      <div class="row mt-4">
+        <input type="number" id="wp-x" placeholder="X" style="flex:1" />
+        <input type="number" id="wp-y" placeholder="Y" style="flex:1" />
+        <button class="btn btn-blue btn-sm" id="btn-add-wp">+</button>
+      </div>
+      <div id="waypoint-list" class="waypoint-list mt-8"></div>
+    </div>
+  </div>
+
+  <!-- Controles de execução -->
+  <div class="section-title">Execução</div>
+  <div class="card">
+    <div class="toggle-row" style="margin-bottom:8px">
+      <div class="toggle-label">Loop de caminho<span>Repetir caminho ao final</span></div>
+      <label class="toggle"><input type="checkbox" id="toggle-loop"/><div class="toggle-track"></div></label>
+    </div>
+    <div class="toggle-row" style="margin-bottom:8px">
+      <div class="toggle-label">Mostrar trilha<span>Linha visual no mapa</span></div>
+      <label class="toggle"><input type="checkbox" id="toggle-trail" checked/><div class="toggle-track"></div></label>
+    </div>
+    <div class="row mt-8">
+      <button class="btn btn-green btn-full" id="btn-start-path">▶ Iniciar</button>
+      <button class="btn btn-red btn-full" id="btn-stop-path">■ Parar</button>
+    </div>
+    <button class="btn btn-ghost btn-full mt-4" id="btn-clear-path" style="margin-top:6px">🗑 Limpar Caminho</button>
+  </div>
+
+  <div id="status-bar"></div>
+</div>
+
+<!-- ═══════════ TAB: IA ═══════════ -->
+<div class="panel" id="panel-ai">
+
+  <div class="section-title">Token IA</div>
+  <div id="ai-token-selector" class="card-sm" style="margin-bottom:10px">
+    <div style="color:var(--text-dim);font-size:13px;text-align:center">
+      Selecione um token na aba ⚔ Tokens
+    </div>
+  </div>
+
+  <!-- Status IA ativo -->
+  <div class="ai-status" id="ai-status-panel">
+    <div class="ai-status-header">
+      <div class="ai-dot"></div>
+      <span>IA Ativa</span>
+    </div>
+    <div class="ai-target" id="ai-target-text">Alvo: —</div>
+    <div class="ai-target" id="ai-step-text">Passo: —</div>
+  </div>
+
+  <!-- Comportamento IA -->
+  <div class="section-title">Comportamento</div>
+  <div class="card">
+    <div style="margin-bottom:10px">
+      <label>Modo de Movimento da IA</label>
+      <select id="ai-mode">
+        <option value="wander">Vagar (Aleatório)</option>
+        <option value="patrol">Patrulha (Waypoints)</option>
+        <option value="chase">Perseguir Token Alvo</option>
+        <option value="flee">Fugir de Token Alvo</option>
+      </select>
+    </div>
+    <div id="ai-target-section" style="display:none;margin-bottom:10px">
+      <label>Token Alvo (para Perseguir/Fugir)</label>
+      <select id="ai-target-token">
+        <option value="">— Selecionar —</option>
+      </select>
+    </div>
+    <div>
+      <label>Velocidade da IA (quadrados/segundo)</label>
+      <div class="range-row">
+        <input type="range" id="ai-speed" min="0.5" max="8" step="0.5" value="2" />
+        <span class="range-val" id="ai-speed-val">2 sq/s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Colisão e parada -->
+  <div class="section-title">Colisão e Interação</div>
+  <div class="card">
+    <div class="toggle-row">
+      <div class="toggle-label">
+        Parar ao contato com Token
+        <span>IA para quando encosta em outro token</span>
+      </div>
+      <label class="toggle"><input type="checkbox" id="toggle-stop-collision" checked/><div class="toggle-track"></div></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-label">
+        Evitar outros tokens
+        <span>IA desvia ao invés de atravessar</span>
+      </div>
+      <label class="toggle"><input type="checkbox" id="toggle-avoid-tokens" checked/><div class="toggle-track"></div></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-label">
+        Mostrar raio de detecção
+        <span>Círculo visual de sensor da IA</span>
+      </div>
+      <label class="toggle"><input type="checkbox" id="toggle-show-radius"/><div class="toggle-track"></div></label>
+    </div>
+    <div style="margin-top:8px">
+      <label>Raio de detecção (quadrados)</label>
+      <div class="range-row">
+        <input type="range" id="ai-detect-radius" min="1" max="20" value="5" />
+        <span class="range-val" id="ai-detect-val">5 sq</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Patrulha waypoints da IA -->
+  <div id="ai-patrol-section" style="display:none">
+    <div class="section-title">Waypoints de Patrulha</div>
+    <div class="card">
+      <div class="row">
+        <input type="number" id="ai-wp-x" placeholder="X" />
+        <input type="number" id="ai-wp-y" placeholder="Y" />
+        <button class="btn btn-blue btn-sm" id="btn-add-ai-wp">+</button>
+      </div>
+      <div id="ai-waypoint-list" class="waypoint-list mt-8"></div>
+    </div>
+  </div>
+
+  <!-- Controles IA -->
+  <div class="row mt-8" style="gap:8px">
+    <button class="btn btn-green btn-full" id="btn-ai-start">🤖 Ligar IA</button>
+    <button class="btn btn-red btn-full" id="btn-ai-stop">■ Desligar</button>
+  </div>
+</div>
+
+<!-- ═══════════ TAB: CONFIG ═══════════ -->
+<div class="panel" id="panel-settings">
+  <div class="section-title">Grade do Mapa</div>
+  <div class="card">
+    <div style="margin-bottom:8px">
+      <label>Tamanho do quadrado (pixels)</label>
+      <input type="number" id="cfg-grid-size" value="75" min="10" max="500" />
+    </div>
+    <div>
+      <label>Unidade de medida</label>
+      <select id="cfg-unit">
+        <option value="squares">Quadrados</option>
+        <option value="feet">Pés (5ft/quadrado)</option>
+        <option value="meters">Metros (1.5m/quadrado)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-title">Visual</div>
+  <div class="card">
+    <div class="toggle-row">
+      <div class="toggle-label">Mostrar números de passo<span>Numeração nos waypoints</span></div>
+      <label class="toggle"><input type="checkbox" id="cfg-show-numbers" checked/><div class="toggle-track"></div></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-label">Animar trajetória<span>Pontos pulsantes no caminho</span></div>
+      <label class="toggle"><input type="checkbox" id="cfg-animate-trail" checked/><div class="toggle-track"></div></label>
+    </div>
+    <div style="margin-top:8px">
+      <label>Espessura da linha de caminho</label>
+      <div class="range-row">
+        <input type="range" id="cfg-line-width" min="1" max="8" value="3" />
+        <span class="range-val" id="cfg-line-val">3px</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Dados</div>
+  <div class="card gap-6">
+    <button class="btn btn-ghost btn-full" id="btn-export-tokens">📤 Exportar Tokens (JSON)</button>
+    <button class="btn btn-ghost btn-full" id="btn-import-tokens">📥 Importar Tokens</button>
+    <button class="btn btn-red btn-full" id="btn-clear-all">🗑 Limpar Tudo</button>
+  </div>
+
+  <div style="margin-top:16px;padding:10px;font-size:11px;color:var(--text-dim);text-align:center;border-top:1px solid var(--border)">
+    Pathfinder Movement v1.0.0<br/>
+    Para Owlbear Rodeo 2.x
+  </div>
+</div>
+
+<script src="/src/pathfinder-types.js"></script>
+<script src="/src/main.js"></script>
+</body>
+</html>

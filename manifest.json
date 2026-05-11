@@ -1,0 +1,18 @@
+{
+  "id": "br.owlbear.pathfinder-movement",
+  "name": "Pathfinder Movement",
+  "description": "Movimentação avançada para tokens Pathfinder: caminhos manuais, automação por IA e controle de velocidade em tempo real.",
+  "author": "Pathfinder Plugin",
+  "version": "1.0.0",
+  "icon": "/icon.svg",
+  "tokens": [],
+  "action": {
+    "title": "Pathfinder Movement",
+    "icon": "/icon.svg",
+    "popover": {
+      "url": "/index.html",
+      "height": 600,
+      "width": 360
+    }
+  }
+}

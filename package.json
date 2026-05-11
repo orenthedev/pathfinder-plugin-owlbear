@@ -1,0 +1,15 @@
+{
+  "name": "owlbear-pathfinder-movement",
+  "version": "1.0.0",
+  "description": "Plugin de movimentação Pathfinder para Owlbear Rodeo 2.x",
+  "scripts": {
+    "dev":   "npx serve . --cors -l 3000",
+    "build": "echo 'Plugin é HTML/JS puro — sem build necessário.'",
+    "start": "npx serve . --cors -l 3000"
+  },
+  "devDependencies": {
+    "serve": "^14.2.3"
+  },
+  "keywords": ["owlbear-rodeo", "plugin", "pathfinder", "ttrpg"],
+  "license": "MIT"
+}
