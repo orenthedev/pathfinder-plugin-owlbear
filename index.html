@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pathfinder Movement</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
 
     :root {
+      --font-title: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+      --font-body:  Georgia, 'Times New Roman', Times, serif;
+      --font-mono:  'Courier New', Courier, monospace;
       --bg-deep:    #0d0d1a;
       --bg-panel:   #131325;
       --bg-card:    #1a1a30;
@@ -32,7 +35,7 @@
     body {
       background: var(--bg-deep);
       color: var(--text);
-      font-family: 'Crimson Text', serif;
+      font-family: var(--font-body);
       font-size: 15px;
       min-height: 100vh;
       overflow-x: hidden;
@@ -49,7 +52,7 @@
     }
     .header-icon { width: 28px; height: 28px; }
     .header h1 {
-      font-family: 'Cinzel', serif;
+      font-family: var(--font-title);
       font-size: 14px;
       font-weight: 700;
       color: var(--gold);
@@ -78,7 +81,7 @@
       padding: 9px 4px;
       text-align: center;
       cursor: pointer;
-      font-family: 'Cinzel', serif;
+      font-family: var(--font-title);
       font-size: 10px;
       letter-spacing: 0.05em;
       color: var(--text-dim);
@@ -95,7 +98,7 @@
 
     /* ── SECTION HEADERS ── */
     .section-title {
-      font-family: 'Cinzel', serif;
+      font-family: var(--font-title);
       font-size: 10px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -146,7 +149,7 @@
       border: 1px solid var(--border);
       border-radius: 4px;
       color: var(--text);
-      font-family: 'Crimson Text', serif;
+      font-family: var(--font-body);
       font-size: 14px;
       padding: 6px 10px;
       outline: none;
@@ -165,7 +168,7 @@
       border-radius: 4px;
       border: 1px solid transparent;
       cursor: pointer;
-      font-family: 'Cinzel', serif;
+      font-family: var(--font-title);
       font-size: 11px;
       letter-spacing: 0.06em;
       font-weight: 600;
@@ -423,7 +426,7 @@
       padding: 1px 6px;
       border-radius: 3px;
       font-size: 10px;
-      font-family: 'Cinzel', serif;
+      font-family: var(--font-title);
       letter-spacing: 0.05em;
     }
     .badge-character { background: rgba(41,128,185,0.3); color: #7fc4e8; border: 1px solid #2980b9; }
